@@ -328,7 +328,7 @@ npm run capacity -- --users 1000 --links-per-user 10 --visits 5000
 ## Backend URL
 
 The backend for this project is available here:  
-[https://github.com/SaiBende/URL_Shortner](https://github.com/SaiBende/URL_Shortner)
+[https://github.com/SaiBende/sggs-platform/tree/main/backend](https://github.com/SaiBende/sggs-platform/tree/main/backend)
 
 ---
 

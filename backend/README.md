@@ -26,7 +26,7 @@ A full-stack URL shortener and link studio for **SGGS — Shorten, Generate, Gro
 - **Authentication:** Clerk (`@clerk/express`), with local Mongo users linked by `clerkId` (email fallback)
 - **File Uploads:** Multer, Cloudinary
 - **Payments:** Clerk Billing (Stripe-backed, managed inside Clerk)
-- **Frontend:** [SGGS Link Studio](https://github.com/SaiBende/SGGS) — React 18, Vite, Tailwind CSS, Clerk
+- **Frontend:** [SGGS Link Studio](https://github.com/SaiBende/sggs-platform/tree/main/frontend) — React 18, Vite, Tailwind CSS, Clerk
 - **Deployment:** Vercel
 
 ## Getting Started
@@ -42,8 +42,8 @@ A full-stack URL shortener and link studio for **SGGS — Shorten, Generate, Gro
 
 1. **Clone the repository:**
     ```sh
-    git clone https://github.com/SaiBende/SGGS-url-shortener-backend.git
-    cd SGGS-url-shortener-backend
+    git clone https://github.com/SaiBende/sggs-platform.git
+    cd sggs-platform/backend
     ```
 
 2. **Install dependencies:**
@@ -135,7 +135,7 @@ A full-stack URL shortener and link studio for **SGGS — Shorten, Generate, Gro
     ```
 
 7. **Frontend:**
-    - The frontend code is available at [https://github.com/SaiBende/SGGS](https://github.com/SaiBende/SGGS)
+    - The frontend code is available at [https://github.com/SaiBende/sggs-platform/tree/main/frontend](https://github.com/SaiBende/sggs-platform/tree/main/frontend)
 
 ## Testing & load testing
 
@@ -393,4 +393,4 @@ This project is licensed under the ISC License.
 
 ---
 
-**Frontend Repository:** [https://github.com/SaiBende/SGGS](https://github.com/SaiBende/SGGS)
+**Frontend Directory:** [https://github.com/SaiBende/sggs-platform/tree/main/frontend](https://github.com/SaiBende/sggs-platform/tree/main/frontend)
