@@ -75,8 +75,8 @@ The visual language lives in `src/index.css` and `tailwind.config.js`:
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
-   cd frontend
+   git clone https://github.com/SaiBende/sggs-platform.git
+   cd sggs-platform/frontend
    ```
 
 2. **Install dependencies:**
