@@ -22,7 +22,7 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 - **Platform subdomains:** Public profiles are also served from DNS-safe handles at `<handle>.sggs.saibende.in`, with short links at `<handle>.sggs.saibende.in/<shortId>`.
 - **Editable page address:** Change the username and subdomain from the page editor, with live availability checks, a shared name pool and a clear warning that old links stop working.
 - **Dashboard:** Search, sort, copy, rename and delete links; open per-link analytics or a downloadable QR code; track plan usage from one workspace.
-- **Analytics:** Per-link visit history rendered as a daily trend chart.
+- **Analytics:** Per-link daily visit trend plus breakdowns for countries, cities, devices, browsers, operating systems, traffic sources, referrers and unique visitors. Bot and prefetch traffic is excluded.
 - **Authentication:** Clerk’s prebuilt sign-in/sign-up UI, email verification, MFA and password reset, themed to match the app.
 - **Payments:** Clerk Billing with monthly and yearly plans, a Clerk-rendered pricing table, and a subscription manager drawer for upgrades, period changes and cancellation.
 - **Responsive design:** Dedicated mobile layouts, a glass navigation bar, custom modals, empty states, loading states and error recovery on every page.

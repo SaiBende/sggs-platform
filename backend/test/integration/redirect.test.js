@@ -441,6 +441,10 @@ test("URL status merges legacy timestamps with Visit rows and enforces ownership
     assert.equal(ownerResponse.payload.visitHistoryLength, 3);
     assert.equal(ownerResponse.payload.visitCount, 3);
     assert.equal(ownerResponse.payload.shortId, link.shortId);
+    assert.equal(ownerResponse.payload.analytics.totalVisits, 3);
+    assert.equal(ownerResponse.payload.analytics.trackedVisits, 2);
+    assert.equal(ownerResponse.payload.analytics.legacyVisits, 1);
+    assert.equal(ownerResponse.payload.analytics.uniqueVisitors, 0);
 
     const strangerResponse = await invoke(handleURLStatus, {
         params: { shortId: link.shortId },
@@ -448,6 +452,122 @@ test("URL status merges legacy timestamps with Visit rows and enforces ownership
     });
 
     assert.equal(strangerResponse.statusCode, 403);
+});
+
+test("URL status breaks down locations, devices and channels without bots", async () => {
+    const user = await createUser();
+    const link = await createLink({ ownerId: user._id });
+
+    const base = {
+        urlId: link._id,
+        ownerId: user._id,
+        shortId: link.shortId,
+        domain: "go.saibende.in",
+        destination: link.redirectURL,
+    };
+
+    await Visit.create([
+        {
+            ...base,
+            clickedAt: new Date(5000),
+            country: "IN",
+            city: "Hyderabad",
+            deviceType: "mobile",
+            browser: "Chrome",
+            os: "Android",
+            channel: "social",
+            referrerHost: "instagram.com",
+            visitorId: "visitor-a",
+        },
+        {
+            ...base,
+            clickedAt: new Date(6000),
+            country: "IN",
+            city: "Mumbai",
+            deviceType: "desktop",
+            browser: "Chrome",
+            os: "Windows",
+            channel: "search",
+            referrerHost: "google.com",
+            visitorId: "visitor-b",
+        },
+        {
+            ...base,
+            clickedAt: new Date(7000),
+            country: "US",
+            city: "New York",
+            deviceType: "tablet",
+            browser: "Safari",
+            os: "iPadOS",
+            channel: "direct",
+            visitorId: "visitor-a",
+        },
+        {
+            ...base,
+            clickedAt: new Date(8000),
+            country: "IN",
+            deviceType: "bot",
+            browser: "Googlebot",
+            os: "Unknown",
+            isBot: true,
+            botName: "Googlebot",
+        },
+        {
+            ...base,
+            clickedAt: new Date(9000),
+            country: "IN",
+            deviceType: "desktop",
+            browser: "Chrome",
+            os: "Windows",
+            isPrefetch: true,
+        },
+    ]);
+
+    const response = await invoke(handleURLStatus, {
+        params: { shortId: link.shortId },
+        user: { user_id: String(user._id) },
+    });
+
+    assert.equal(response.statusCode, 200);
+
+    const { analytics } = response.payload;
+    assert.equal(response.payload.visitHistoryLength, 3);
+    assert.deepEqual(
+        response.payload.visitHistory.map((visit) => visit.timestamp),
+        [5000, 6000, 7000]
+    );
+    assert.equal(analytics.totalVisits, 3);
+    assert.equal(analytics.trackedVisits, 3);
+    assert.equal(analytics.legacyVisits, 0);
+    assert.equal(analytics.uniqueVisitors, 2);
+    assert.equal(analytics.countriesReached, 2);
+    assert.deepEqual(analytics.countries, [
+        { name: "IN", count: 2 },
+        { name: "US", count: 1 },
+    ]);
+    assert.deepEqual(analytics.cities, [
+        { name: "Hyderabad", count: 1 },
+        { name: "Mumbai", count: 1 },
+        { name: "New York", count: 1 },
+    ]);
+    assert.deepEqual(analytics.devices, [
+        { name: "desktop", count: 1 },
+        { name: "mobile", count: 1 },
+        { name: "tablet", count: 1 },
+    ]);
+    assert.deepEqual(analytics.browsers, [
+        { name: "Chrome", count: 2 },
+        { name: "Safari", count: 1 },
+    ]);
+    assert.deepEqual(analytics.channels, [
+        { name: "direct", count: 1 },
+        { name: "search", count: 1 },
+        { name: "social", count: 1 },
+    ]);
+    assert.deepEqual(analytics.referrers, [
+        { name: "google.com", count: 1 },
+        { name: "instagram.com", count: 1 },
+    ]);
 });
 
 test("deleting a link removes its Visits and decrements the user's URL count", async () => {

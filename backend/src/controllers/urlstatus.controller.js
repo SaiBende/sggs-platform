@@ -1,6 +1,26 @@
 import { URL } from "../models/url.model.js";
 import { Visit } from "../models/visit.model.js";
 
+// Bots and speculative prefetches are stored for auditability, but they are
+// not people clicking the link. Every report below excludes them.
+const HUMAN_MATCH = {
+    isBot: { $ne: true },
+    isPrefetch: { $ne: true },
+};
+
+const breakdownPipeline = (field, limit = 8) => [
+    { $match: { [field]: { $nin: [null, ""] } } },
+    { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+    { $sort: { count: -1, _id: 1 } },
+    { $limit: limit },
+];
+
+const toBreakdown = (rows) =>
+    (rows || []).map((row) => ({
+        name: String(row._id),
+        count: row.count || 0,
+    }));
+
 export const handleURLStatus = async (req, res) => {
     const { shortId } = req.params;
 
@@ -20,30 +40,113 @@ export const handleURLStatus = async (req, res) => {
             return res.status(403).json({ error: "You are not allowed to view this URL's analytics" });
         }
 
-        const visits = await Visit.find({ urlId: url._id })
-            .select({ clickedAt: 1 })
-            .sort({ clickedAt: 1 })
-            .lean();
+        // One pass over the Visit collection produces the chart timestamps and
+        // every breakdown. The raw timestamps keep the existing client-side
+        // local-date grouping, while the facets avoid one query per metric.
+        const [summary = {}] = await Visit.aggregate([
+            {
+                $match: {
+                    urlId: url._id,
+                    ...HUMAN_MATCH,
+                },
+            },
+            {
+                $facet: {
+                    totals: [{ $count: "visits" }],
+                    uniqueVisitors: [
+                        { $match: { visitorId: { $nin: [null, ""] } } },
+                        { $group: { _id: "$visitorId" } },
+                        { $count: "count" },
+                    ],
+                    countriesReached: [
+                        { $match: { country: { $nin: [null, ""] } } },
+                        { $group: { _id: "$country" } },
+                        { $count: "count" },
+                    ],
+                    timestamps: [
+                        { $sort: { clickedAt: 1 } },
+                        { $project: { _id: 0, timestamp: "$clickedAt" } },
+                    ],
+                    countries: breakdownPipeline("country"),
+                    cities: breakdownPipeline("city", 6),
+                    referrers: breakdownPipeline("referrerHost"),
+                    devices: [
+                        {
+                            $group: {
+                                _id: { $ifNull: ["$deviceType", "unknown"] },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { count: -1, _id: 1 } },
+                    ],
+                    browsers: [
+                        {
+                            $group: {
+                                _id: { $ifNull: ["$browser", "Unknown"] },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { count: -1, _id: 1 } },
+                        { $limit: 8 },
+                    ],
+                    operatingSystems: [
+                        {
+                            $group: {
+                                _id: { $ifNull: ["$os", "Unknown"] },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { count: -1, _id: 1 } },
+                        { $limit: 6 },
+                    ],
+                    channels: [
+                        {
+                            $group: {
+                                _id: { $ifNull: ["$channel", "direct"] },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { count: -1, _id: 1 } },
+                    ],
+                },
+            },
+        ]);
 
-        // Keep the response shape the current chart expects. Legacy timestamps
-        // are merged with the new Visit collection so no history is lost during
-        // the transition.
-        const visitHistory = [
-            ...(url.visitHistory || []).map((visit) => ({
-                timestamp: visit.timestamp,
-            })),
-            ...visits.map((visit) => ({
-                timestamp: new Date(visit.clickedAt).getTime(),
-            })),
-        ]
-            .filter((visit) => Number.isFinite(visit.timestamp))
-            .sort((a, b) => a.timestamp - b.timestamp);
+        // Legacy timestamps are merged with the new Visit rows so the chart
+        // keeps the link's full history during and after the migration.
+        const legacyTimestamps = (url.visitHistory || [])
+            .map((visit) => visit.timestamp)
+            .filter((timestamp) => Number.isFinite(timestamp));
+
+        const liveTimestamps = (summary.timestamps || [])
+            .map((visit) => new Date(visit.timestamp).getTime())
+            .filter((timestamp) => Number.isFinite(timestamp));
+
+        const visitHistory = [...legacyTimestamps, ...liveTimestamps]
+            .sort((a, b) => a - b)
+            .map((timestamp) => ({ timestamp }));
+
+        const trackedVisits = summary.totals?.[0]?.visits || 0;
 
         return res.status(200).json({
             visitHistory,
             visitHistoryLength: visitHistory.length,
             visitCount: visitHistory.length,
             shortId,
+            analytics: {
+                totalVisits: visitHistory.length,
+                trackedVisits,
+                legacyVisits: legacyTimestamps.length,
+                uniqueVisitors: summary.uniqueVisitors?.[0]?.count || 0,
+                countriesReached: summary.countriesReached?.[0]?.count || 0,
+                countries: toBreakdown(summary.countries),
+                cities: toBreakdown(summary.cities),
+                devices: toBreakdown(summary.devices),
+                browsers: toBreakdown(summary.browsers),
+                operatingSystems: toBreakdown(summary.operatingSystems),
+                channels: toBreakdown(summary.channels),
+                referrers: toBreakdown(summary.referrers),
+            },
         });
     } catch (error) {
         console.error("Error fetching URL status:", error);

@@ -34,6 +34,7 @@ import { cn } from "../lib/utils";
 import { shortDomain, shortUrl } from "../lib/brand";
 import { platformUrl } from "../lib/platform";
 import VisitTrends from "../components/VisitTrends";
+import AnalyticsBreakdown from "../components/AnalyticsBreakdown";
 import Loading from "../components/Loading";
 import ErrorState from "../components/ErrorState";
 import BillingBoundary from "../components/BillingBoundary";
@@ -443,6 +444,7 @@ function Dashboard() {
   const [qrLink, setQrLink] = useState(null);
   const [analyticsLink, setAnalyticsLink] = useState(null);
   const [visitHistory, setVisitHistory] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
 
@@ -629,6 +631,7 @@ function Dashboard() {
   const openAnalytics = async (url) => {
     setAnalyticsLink(url);
     setVisitHistory([]);
+    setAnalytics(null);
     setAnalysisError(null);
     setAnalysisLoading(true);
 
@@ -643,6 +646,7 @@ function Dashboard() {
         throw new Error(result.error || "Failed to fetch analysis.");
       }
       setVisitHistory(result.visitHistory || []);
+      setAnalytics(result.analytics || null);
     } catch (err) {
       console.error("Error fetching analysis:", err);
       setAnalysisError(err.message || "Could not load analytics for this link.");
@@ -971,13 +975,15 @@ function Dashboard() {
         onClose={() => {
           setAnalyticsLink(null);
           setVisitHistory([]);
+          setAnalytics(null);
           setAnalysisError(null);
         }}
         title="Link performance"
         description={analyticsLink ? prettyUrl(shortUrl(analyticsLink.shortId)) : undefined}
-        size="lg"
+        size="xl"
+        className="max-h-[calc(100vh-2rem)]"
       >
-        <div className="p-5 sm:p-6">
+        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto overscroll-contain p-5 sm:p-6">
           {analysisLoading ? (
             <Loading compact message="Loading visit history..." className="py-14" />
           ) : analysisError ? (
@@ -988,11 +994,14 @@ function Dashboard() {
               className="py-10"
             />
           ) : (
-            <VisitTrends
-              visitHistory={visitHistory}
-              title={analyticsLink ? `Clicks for /${analyticsLink.shortId}` : "Visitor trends"}
-              height={260}
-            />
+            <>
+              <VisitTrends
+                visitHistory={visitHistory}
+                title={analyticsLink ? `Clicks for /${analyticsLink.shortId}` : "Visitor trends"}
+                height={240}
+              />
+              <AnalyticsBreakdown analytics={analytics} />
+            </>
           )}
         </div>
       </Modal>

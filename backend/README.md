@@ -9,7 +9,7 @@ A full-stack URL shortener and link studio for **SGGS — Shorten, Generate, Gro
 - **Modern workspace UI:** Responsive dashboard with search, sorting, copy, rename and delete actions, QR and analytics modals, plus a live link-in-bio editor.
 - **QR studio:** Fully client-side QR designer with colours, patterns, error correction, optional logo and PNG download.
 - **User Dashboard:** View and manage your created URLs, see visit statistics.
-- **URL Analytics:** Track visit history and status for each short URL.
+- **URL Analytics:** Track visit history and status for each short URL, with per-link breakdowns for countries, cities, devices, browsers, operating systems, channels, referrers and unique visitors. Bot and prefetch traffic is excluded.
 - **Edit Short URLs:** Change the short ID of your URLs.
 - **Public Profiles:** Share your profile with social media links and a custom description.
 - **Platform subdomains:** Every account gets a DNS-safe handle for a public profile at `<handle>.sggs.saibende.in`, and can change its username and subdomain from the page editor.
