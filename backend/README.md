@@ -5,7 +5,7 @@ A full-stack URL shortener and link studio for **SGGS — Shorten, Generate, Gro
 ## Features
 
 - **User Authentication:** Clerk-powered sign-up/sign-in with prebuilt frontend components, email verification, MFA, and password reset. Application data stays in MongoDB.
-- **Shorten URLs:** Generate unique or custom short URLs.
+- **Shorten URLs:** Generate unique or custom short URLs. Creating a destination that already exists in the same account returns the existing link instead of a duplicate, so it can be reused or renamed.
 - **Modern workspace UI:** Responsive dashboard with search, sorting, copy, rename and delete actions, QR and analytics modals, plus a live link-in-bio editor.
 - **QR studio:** Fully client-side QR designer with colours, patterns, error correction, optional logo and PNG download.
 - **User Dashboard:** View and manage your created URLs, see visit statistics.

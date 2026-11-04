@@ -16,6 +16,40 @@ async function handleGenerateNewShortURL(req, res) {
             return res.status(404).json({ error: "User not found" });
         }
 
+        const body = req.body || {};
+
+        if (typeof body.url !== "string" || !body.url.trim()) {
+            return res.status(400).json({ error: "URL is required" });
+        }
+
+        const destination = body.url.trim();
+        const customURL =
+            typeof body.customURL === "string" ? body.customURL.trim() : "";
+
+        // Reuse the user's existing link instead of creating a duplicate. The
+        // query is scoped to the owner so one user can never discover another
+        // user's short link. If historical duplicates exist, return the oldest.
+        const existingURL = await URL.findOne({
+            createdBy: userId,
+            redirectURL: destination,
+        })
+            .select("shortId redirectURL createdAt visitCount")
+            .sort({ createdAt: 1 })
+            .lean();
+
+        if (existingURL) {
+            return res.status(409).json({
+                duplicate: true,
+                id: existingURL.shortId,
+                shortId: existingURL.shortId,
+                redirectURL: existingURL.redirectURL,
+                createdAt: existingURL.createdAt,
+                visitCount: existingURL.visitCount || 0,
+                error: "You already shortened this link.",
+                message: "This destination is already in your account.",
+            });
+        }
+
         // Effective plan (Clerk subscription or legacy purchase, expiry-aware)
         const plan = resolvePlan(user);
         const urlLimit = plan.limit;
@@ -25,14 +59,8 @@ async function handleGenerateNewShortURL(req, res) {
             return res.status(403).json({ error: `You have reached your limit of ${urlLimit} short URLs` });
         }
 
-        const body = req.body;
-
-        if (!body.url) {
-            return res.status(400).json({ error: "URL is required" });
-        }
-
         let newURL;
-        if (!body.customURL) {
+        if (!customURL) {
             // Generated IDs may land on a reserved name; regenerate until safe.
             let generatedShortId;
             do {
@@ -41,21 +69,21 @@ async function handleGenerateNewShortURL(req, res) {
 
             newURL = await URL.create({
                 shortId: generatedShortId,
-                redirectURL: body.url,
+                redirectURL: destination,
                 createdBy: userId,
                 visitHistory: [],
             });
         } else {
-            if (isReservedShortId(body.customURL)) {
+            if (isReservedShortId(customURL)) {
                 return res.status(400).json({ error: "This short URL is reserved" });
             }
-            const alreadypresenturl = await URL.findOne({ shortId: body.customURL });
+            const alreadypresenturl = await URL.findOne({ shortId: customURL });
             if (alreadypresenturl) {
                 return res.status(400).json({ error: "Custom URL already present" });
             }
             newURL = await URL.create({
-                shortId: body.customURL,
-                redirectURL: body.url,
+                shortId: customURL,
+                redirectURL: destination,
                 createdBy: userId,
                 visitHistory: [],
             });

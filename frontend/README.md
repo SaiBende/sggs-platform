@@ -16,7 +16,7 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 
 ## Features
 
-- **URL shortener:** Shorten any URL with an optional custom back-half. Every link gets a copy button, QR code and click history.
+- **URL shortener:** Shorten any URL with an optional custom back-half. If a destination is already in your account, SGGS returns the existing short link and offers a one-click edit of its back-half; every link also gets a copy button, QR code and click history.
 - **QR studio:** Design a QR code with colour presets, foreground/background colours, dot styles, error correction, size and an optional logo, then download a print-ready PNG.
 - **Link-in-bio page:** Add a photo, bio and social links, preview the page live, and publish at `/u/<username>`.
 - **Platform subdomains:** Public profiles are also served from DNS-safe handles at `<handle>.sggs.saibende.in`, with short links at `<handle>.sggs.saibende.in/<shortId>`.

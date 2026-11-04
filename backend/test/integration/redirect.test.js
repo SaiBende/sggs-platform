@@ -41,6 +41,9 @@ const { handleURLStatus } = await import(
 const { handleDeleteURL } = await import(
     "../../src/controllers/deleteurl.controller.js"
 );
+const { handleGenerateNewShortURL } = await import(
+    "../../src/controllers/url.controller.js"
+);
 
 let server;
 let port;
@@ -490,4 +493,80 @@ test("deleting a link removes its Visits and decrements the user's URL count", a
 
     const updatedUser = await User.findById(user._id).lean();
     assert.equal(updatedUser.urlCount, 1);
+});
+
+test("creating a destination that already exists returns the existing link", async () => {
+    const user = await createUser();
+    const destination = `https://example.com/duplicate-${uniqueShortId("dest")}`;
+
+    const first = await invoke(handleGenerateNewShortURL, {
+        user: { user_id: String(user._id) },
+        body: { url: destination },
+    });
+
+    assert.equal(first.statusCode, 200);
+    assert.ok(first.payload.id);
+
+    const second = await invoke(handleGenerateNewShortURL, {
+        user: { user_id: String(user._id) },
+        body: { url: destination },
+    });
+
+    assert.equal(second.statusCode, 409);
+    assert.equal(second.payload.duplicate, true);
+    assert.equal(second.payload.id, first.payload.id);
+    assert.equal(second.payload.shortId, first.payload.id);
+    assert.equal(second.payload.redirectURL, destination);
+    assert.equal(
+        await ShortURL.countDocuments({
+            createdBy: user._id,
+            redirectURL: destination,
+        }),
+        1
+    );
+
+    const updatedUser = await User.findById(user._id).lean();
+    assert.equal(updatedUser.urlCount, 1);
+});
+
+test("duplicate detection is scoped to the link owner", async () => {
+    const owner = await createUser();
+    const otherUser = await createUser();
+    const destination = `https://example.com/shared-${uniqueShortId("dest")}`;
+
+    const first = await invoke(handleGenerateNewShortURL, {
+        user: { user_id: String(owner._id) },
+        body: { url: destination },
+    });
+    const second = await invoke(handleGenerateNewShortURL, {
+        user: { user_id: String(otherUser._id) },
+        body: { url: destination },
+    });
+
+    assert.equal(first.statusCode, 200);
+    assert.equal(second.statusCode, 200);
+    assert.notEqual(second.payload.id, first.payload.id);
+    assert.equal(await ShortURL.countDocuments({ redirectURL: destination }), 2);
+});
+
+test("an existing link is returned even when the user is at their limit", async () => {
+    const user = await createUser();
+    const destination = `https://example.com/limit-${uniqueShortId("dest")}`;
+    const shortId = uniqueShortId("existing");
+
+    await ShortURL.create({
+        shortId,
+        redirectURL: destination,
+        createdBy: user._id,
+    });
+    await User.updateOne({ _id: user._id }, { $set: { urlCount: 10 } });
+
+    const response = await invoke(handleGenerateNewShortURL, {
+        user: { user_id: String(user._id) },
+        body: { url: destination },
+    });
+
+    assert.equal(response.statusCode, 409);
+    assert.equal(response.payload.duplicate, true);
+    assert.equal(response.payload.id, shortId);
 });

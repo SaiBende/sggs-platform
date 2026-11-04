@@ -9,10 +9,12 @@ import {
   Copy,
   Download,
   ExternalLink,
+  Info,
   Link2,
   Loader2,
   LockKeyhole,
   MousePointerClick,
+  Pencil,
   QrCode,
   Sparkles,
   Wand2,
@@ -32,6 +34,7 @@ function ShortenLink({ compact = false, returnTo = "/shortenlink" }) {
   const [customURL, setCustomURL] = useState("");
   const [loading, setLoading] = useState(false);
   const [shortenedURL, setShortenedURL] = useState("");
+  const [duplicateLink, setDuplicateLink] = useState(null);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [pasting, setPasting] = useState(false);
@@ -43,6 +46,7 @@ function ShortenLink({ compact = false, returnTo = "/shortenlink" }) {
     setLoading(true);
     setError(null);
     setShortenedURL("");
+    setDuplicateLink(null);
     setCopied(false);
 
     try {
@@ -64,7 +68,14 @@ function ShortenLink({ compact = false, returnTo = "/shortenlink" }) {
 
       const result = await response.json();
 
-      if (result.id) {
+      if (result.duplicate && result.id) {
+        setShortenedURL(shortUrl(result.id));
+        setDuplicateLink({
+          shortId: result.id,
+          redirectURL: result.redirectURL || longURL,
+        });
+        toast.info("This link is already in your account");
+      } else if (result.id) {
         const newURL = shortUrl(result.id);
         toast.success("Short link created");
         setShortenedURL(newURL);
@@ -121,6 +132,7 @@ function ShortenLink({ compact = false, returnTo = "/shortenlink" }) {
     setLongURL("");
     setCustomURL("");
     setShortenedURL("");
+    setDuplicateLink(null);
     setError(null);
     setCopied(false);
   };
@@ -226,12 +238,31 @@ function ShortenLink({ compact = false, returnTo = "/shortenlink" }) {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 sm:p-5">
+              <div
+                className={cn(
+                  "mt-6 rounded-2xl border p-4 sm:p-5",
+                  duplicateLink
+                    ? "border-amber-200 bg-amber-50/70"
+                    : "border-emerald-200 bg-emerald-50/60"
+                )}
+              >
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                      <Check className="h-3.5 w-3.5" /> Link ready
+                    <p
+                      className={cn(
+                        "flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em]",
+                        duplicateLink ? "text-amber-700" : "text-emerald-700"
+                      )}
+                    >
+                      {duplicateLink ? <Info className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                      {duplicateLink ? "Already shortened" : "Link ready"}
                     </p>
+                    {duplicateLink && (
+                      <p className="mt-1.5 text-[12px] leading-5 text-amber-800">
+                        This destination is already in your account. Use the existing short link below, or edit its
+                        back-half.
+                      </p>
+                    )}
                     <a
                       href={shortenedURL}
                       target="_blank"
@@ -253,6 +284,17 @@ function ShortenLink({ compact = false, returnTo = "/shortenlink" }) {
                       >
                         <ExternalLink className="h-3.5 w-3.5" /> Open
                       </a>
+                      {duplicateLink && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            navigate(`/dashboard?edit=${encodeURIComponent(duplicateLink.shortId)}`)
+                          }
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Edit back-half
+                        </Button>
+                      )}
                       <button
                         type="button"
                         onClick={resetForm}

@@ -459,6 +459,11 @@ function Dashboard() {
     () => new URLSearchParams(window.location.search).get("billing") === "success",
     []
   );
+  const editShortId = useMemo(
+    () => new URLSearchParams(window.location.search).get("edit"),
+    []
+  );
+  const openedEditRef = useRef(false);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -516,6 +521,30 @@ function Dashboard() {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  // The create page links here with ?edit=<shortId> when the destination
+  // already exists. Open the existing rename modal once the dashboard data is
+  // loaded, then remove the parameter so a refresh does not reopen it.
+  useEffect(() => {
+    if (!editShortId || openedEditRef.current || !userData?.urls) return;
+
+    const link = userData.urls.find((url) => url.shortId === editShortId);
+    if (!link) return;
+
+    openedEditRef.current = true;
+    setRenameLink(link);
+    setRenameValue(link.shortId);
+    setRenameError(null);
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete("edit");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}`
+    );
+  }, [editShortId, userData]);
 
   const urls = useMemo(() => userData?.urls || [], [userData]);
   const user = userData?.user;
