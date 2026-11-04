@@ -81,6 +81,10 @@
     @apply border-b border-ink/10 bg-canvas/80 backdrop-blur-xl;
   }
 
+  .map-tiles-soft {
+    filter: saturate(0.62) contrast(0.94) brightness(1.04);
+  }
+
   .hairline {
     @apply border border-ink/10;
   }

@@ -40,7 +40,7 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 - **Payments:** Clerk Billing (`PricingTable`, `SubscriptionDetailsButton`)
 - **QR codes:** `qrcode.react` and `react-qrcode-logo`
 - **Brand helpers:** `src/lib/brand.js` — full name, domain, live short-link base
-- **Analytics:** Chart.js + `react-chartjs-2`, Leaflet + `react-leaflet` for the lazy-loaded traffic map
+- **Analytics:** Chart.js + `react-chartjs-2`, Leaflet + `react-leaflet` with keyless OpenStreetMap tiles for the lazy-loaded traffic map
 - **Notifications:** `react-toastify`
 - **State:** React hooks — no global state library
 

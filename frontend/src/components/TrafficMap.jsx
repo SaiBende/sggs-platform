@@ -44,11 +44,15 @@ function TrafficMap({ points = [] }) {
         worldCopyJump
         className="h-full w-full"
       >
+        {/* Leaflet itself needs no key. OpenStreetMap's public tile server is
+            keyless too and requires the attribution below. CARTO's CDN now
+            serves an "API key required" tile without an account, so it must
+            not be used as a drop-in replacement. */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
+          className="map-tiles-soft"
         />
         <FitBounds points={points} />
         {points.map((point) => {
