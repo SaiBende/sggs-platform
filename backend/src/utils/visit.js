@@ -102,6 +102,26 @@ const toNumber = (value) => {
     return Number.isFinite(number) ? number : null;
 };
 
+// Vercel sends an IANA timezone, but a direct request could supply an invalid
+// value. MongoDB's $hour/$dayOfWeek aggregation rejects unknown zones, so only
+// persist zones the runtime can resolve. The cache keeps the hot redirect path
+// from constructing a formatter on every click.
+const validTimezones = new Set(["UTC"]);
+
+const sanitizeTimezone = (value) => {
+    const timezone = asString(value, 80);
+    if (!timezone) return null;
+    if (validTimezones.has(timezone)) return timezone;
+
+    try {
+        new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+        validTimezones.add(timezone);
+        return timezone;
+    } catch {
+        return null;
+    }
+};
+
 const roundCoordinate = (value) =>
     value == null ? null : Math.round(value * 100) / 100;
 
@@ -426,7 +446,7 @@ const buildVisit = ({
         country: asString(req.headers?.["x-vercel-ip-country"], 8),
         region: decodeHeader(req.headers?.["x-vercel-ip-country-region"]),
         city: decodeHeader(req.headers?.["x-vercel-ip-city"]),
-        timezone: asString(req.headers?.["x-vercel-ip-timezone"], 80),
+        timezone: sanitizeTimezone(req.headers?.["x-vercel-ip-timezone"]),
         latitude: roundCoordinate(
             toNumber(req.headers?.["x-vercel-ip-latitude"])
         ),

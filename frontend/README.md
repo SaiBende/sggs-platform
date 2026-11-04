@@ -22,7 +22,7 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 - **Platform subdomains:** Public profiles are also served from DNS-safe handles at `<handle>.sggs.saibende.in`, with short links at `<handle>.sggs.saibende.in/<shortId>`.
 - **Editable page address:** Change the username and subdomain from the page editor, with live availability checks, a shared name pool and a clear warning that old links stop working.
 - **Dashboard:** Search, sort, copy, rename and delete links; open per-link analytics or a downloadable QR code; track plan usage from one workspace.
-- **Analytics:** Per-link daily visit trend plus breakdowns for countries, cities, devices, browsers, operating systems, traffic sources, referrers and unique visitors. Bot and prefetch traffic is excluded.
+- **Analytics workspace:** A dedicated `/analytics` page with a searchable link picker and 7/30/90-day or all-time ranges. It shows daily trends, hourly and weekday patterns, a traffic map, top countries and cities, devices, browsers, operating systems, traffic sources, referrers, unique visitors, recent visits and six headline metrics. Bot and prefetch traffic is excluded, and the same breakdowns are available in the dashboard modal.
 - **Authentication:** Clerk’s prebuilt sign-in/sign-up UI, email verification, MFA and password reset, themed to match the app.
 - **Payments:** Clerk Billing with monthly and yearly plans, a Clerk-rendered pricing table, and a subscription manager drawer for upgrades, period changes and cancellation.
 - **Responsive design:** Dedicated mobile layouts, a glass navigation bar, custom modals, empty states, loading states and error recovery on every page.
@@ -39,7 +39,7 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 - **Payments:** Clerk Billing (`PricingTable`, `SubscriptionDetailsButton`)
 - **QR codes:** `qrcode.react` and `react-qrcode-logo`
 - **Brand helpers:** `src/lib/brand.js` — full name, domain, live short-link base
-- **Analytics:** Chart.js + `react-chartjs-2`
+- **Analytics:** Chart.js + `react-chartjs-2`, Leaflet + `react-leaflet` for the lazy-loaded traffic map
 - **Notifications:** `react-toastify`
 - **State:** React hooks — no global state library
 
@@ -200,7 +200,7 @@ Keep the existing CAA records (`pki.goog`, `sectigo.com`, `letsencrypt.org`).
 │   ├── lib/               # brand/platform helpers, class merging, formatting
 │   ├── legacy/
 │   │   └── stripe/        # inactive Stripe pricing and return pages
-│   ├── pages/             # Home, Dashboard, Pricing, LinkTree, About, ...
+│   ├── pages/             # Home, Dashboard, Analytics, Pricing, LinkTree, About, ...
 │   ├── publicprofile/     # public /u/:username profile
 │   ├── tenant/            # subdomain profile, redirects and 404
 │   ├── utils/             # Clerk auth, appearance, redirect helpers
@@ -224,8 +224,9 @@ npm run build     # production build into dist/
 npm run preview   # serve the production build locally
 ```
 
-The production build is currently a single JS chunk (~915 kB, ~284 kB gzip);
-Vite prints its >500 kB advisory. Route-level `React.lazy` or manual vendor
+The production build is a main JS chunk (~967 kB, ~296 kB gzip) plus a separate
+lazy-loaded Leaflet map chunk (~156 kB, ~46 kB gzip); Vite still prints its
+>500 kB advisory for the main chunk. Route-level `React.lazy` or manual vendor
 chunks are the next performance step when it becomes important.
 
 ---
@@ -256,6 +257,11 @@ chunks are the next performance step when it becomes important.
 - **Manage from the dashboard:** At `/dashboard`, search, sort, rename, delete
   and analyse your links, check plan usage, and copy your public page URL or
   platform subdomain.
+- **Explore analytics:** Open `/analytics` from the dashboard or your account
+  menu, pick a link, and switch between the last 7, 30 or 90 days or all time.
+  The selected link and range stay in the URL (`?link=<shortId>&range=30`) so
+  the view can be bookmarked or shared with yourself. The traffic map loads
+  only when that panel is reached.
 
 Protected routes redirect signed-out visitors to `/login` and return them to
 the requested page after authentication.

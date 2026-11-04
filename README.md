@@ -8,8 +8,8 @@ short links, branded QR codes, link-in-bio pages and click analytics.
 | Frontend | [`frontend/`](frontend/) | https://sggs.saibende.in | React 18, Vite, Tailwind CSS, Clerk |
 | Backend | [`backend/`](backend/) | https://go.saibende.in | Node.js, Express, MongoDB, Clerk |
 
-The frontend serves the dashboard, QR studio and public profiles at
-`/u/<username>` and `<handle>.sggs.saibende.in`. The backend owns
+The frontend serves the dashboard, QR studio, analytics workspace and public
+profiles at `/u/<username>` and `<handle>.sggs.saibende.in`. The backend owns
 authentication, link storage, redirects, analytics and Clerk Billing.
 
 New share links use `https://go.saibende.in/:shortId`. Links created before

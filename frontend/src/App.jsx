@@ -13,6 +13,7 @@ import Services from './pages/Services';
 import LinkTree from './pages/LinkTree';
 import Pricing from './pages/Pricing';
 import Dashboard from './pages/Dashboard';
+import Analytics from './pages/Analytics';
 import Home from './pages/Home';
 import ShortenLinkPage from './pages/ShortenLinkPage';
 import RedirectURL from './components/RedirectURL';
@@ -64,6 +65,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="analytics"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
                 </ProtectedRoute>
               }
             />

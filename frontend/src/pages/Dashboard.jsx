@@ -383,6 +383,7 @@ function ProfileRailCard({ user, profileUrl, onCopy, copied }) {
 function QuickActions() {
   const actions = [
     { to: "/shortenlink", icon: Plus, label: "Create a short link", hint: "Paste a URL" },
+    { to: "/analytics", icon: BarChart3, label: "Open analytics", hint: "Clicks & traffic" },
     { to: "/qrgenerate", icon: QrCode, label: "Design a QR code", hint: "Brand it" },
     { to: "/linktree", icon: UserRound, label: "Edit your page", hint: "Link in bio" },
   ];
@@ -413,6 +414,7 @@ function WorkspaceNav() {
   const items = [
     { icon: LayoutDashboard, label: "Overview", active: true },
     { icon: Link2, label: "Links", href: "#links" },
+    { icon: BarChart3, label: "Analytics", to: "/analytics" },
     { icon: QrCode, label: "QR studio", to: "/qrgenerate" },
     { icon: UserRound, label: "Link in bio", to: "/linktree" },
     { icon: Wallet, label: "Plans & billing", to: "/pricing" },

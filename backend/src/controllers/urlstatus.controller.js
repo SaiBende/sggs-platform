@@ -8,6 +8,60 @@ const HUMAN_MATCH = {
     isPrefetch: { $ne: true },
 };
 
+const RANGE_DAYS = new Set([7, 30, 90]);
+
+const resolveRange = (value) => {
+    const days = Number(value);
+    return RANGE_DAYS.has(days) ? days : null;
+};
+
+const fillHours = (rows) => {
+    const counts = new Map((rows || []).map((row) => [row._id, row.count]));
+
+    return Array.from({ length: 24 }, (_, hour) => ({
+        hour,
+        count: counts.get(hour) || 0,
+    }));
+};
+
+const fillWeekdays = (rows) => {
+    const counts = new Map((rows || []).map((row) => [row._id, row.count]));
+
+    return Array.from({ length: 7 }, (_, index) => ({
+        day: index + 1,
+        count: counts.get(index + 1) || 0,
+    }));
+};
+
+const toMapPoints = (rows) =>
+    (rows || [])
+        .map((row) => ({
+            lat: row._id?.lat,
+            lng: row._id?.lng,
+            count: row.count || 0,
+            city: row.city || null,
+            country: row.country || null,
+        }))
+        .filter(
+            (point) =>
+                Number.isFinite(point.lat) && Number.isFinite(point.lng)
+        );
+
+const toRecentVisits = (rows) =>
+    (rows || []).map((visit) => ({
+        clickedAt: visit.clickedAt,
+        country: visit.country || null,
+        city: visit.city || null,
+        region: visit.region || null,
+        deviceType: visit.deviceType || "unknown",
+        browser: visit.browser || null,
+        os: visit.os || null,
+        timezone: visit.timezone || null,
+        channel: visit.channel || "direct",
+        referrerHost: visit.referrerHost || null,
+        isQr: Boolean(visit.isQr),
+    }));
+
 const breakdownPipeline = (field, limit = 8) => [
     { $match: { [field]: { $nin: [null, ""] } } },
     { $group: { _id: `$${field}`, count: { $sum: 1 } } },
@@ -43,13 +97,22 @@ export const handleURLStatus = async (req, res) => {
         // One pass over the Visit collection produces the chart timestamps and
         // every breakdown. The raw timestamps keep the existing client-side
         // local-date grouping, while the facets avoid one query per metric.
+        const rangeDays = resolveRange(req.body?.days);
+        const rangeStart = rangeDays
+            ? new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000)
+            : null;
+
+        const match = {
+            urlId: url._id,
+            ...HUMAN_MATCH,
+        };
+
+        if (rangeStart) {
+            match.clickedAt = { $gte: rangeStart };
+        }
+
         const [summary = {}] = await Visit.aggregate([
-            {
-                $match: {
-                    urlId: url._id,
-                    ...HUMAN_MATCH,
-                },
-            },
+            { $match: match },
             {
                 $facet: {
                     totals: [{ $count: "visits" }],
@@ -108,6 +171,85 @@ export const handleURLStatus = async (req, res) => {
                         },
                         { $sort: { count: -1, _id: 1 } },
                     ],
+                    hourly: [
+                        {
+                            $group: {
+                                _id: {
+                                    $hour: {
+                                        date: "$clickedAt",
+                                        timezone: {
+                                            $ifNull: ["$timezone", "UTC"],
+                                        },
+                                    },
+                                },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { _id: 1 } },
+                    ],
+                    weekdays: [
+                        {
+                            $group: {
+                                _id: {
+                                    $dayOfWeek: {
+                                        date: "$clickedAt",
+                                        timezone: {
+                                            $ifNull: ["$timezone", "UTC"],
+                                        },
+                                    },
+                                },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { _id: 1 } },
+                    ],
+                    mapPoints: [
+                        {
+                            $match: {
+                                latitude: { $ne: null },
+                                longitude: { $ne: null },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: {
+                                    lat: { $round: ["$latitude", 1] },
+                                    lng: { $round: ["$longitude", 1] },
+                                },
+                                count: { $sum: 1 },
+                                city: { $first: "$city" },
+                                country: { $first: "$country" },
+                            },
+                        },
+                        {
+                            $sort: {
+                                count: -1,
+                                "_id.lat": 1,
+                                "_id.lng": 1,
+                            },
+                        },
+                        { $limit: 200 },
+                    ],
+                    recentVisits: [
+                        { $sort: { clickedAt: -1 } },
+                        { $limit: 20 },
+                        {
+                            $project: {
+                                _id: 0,
+                                clickedAt: 1,
+                                country: 1,
+                                city: 1,
+                                region: 1,
+                                deviceType: 1,
+                                browser: 1,
+                                os: 1,
+                                timezone: 1,
+                                channel: 1,
+                                referrerHost: 1,
+                                isQr: 1,
+                            },
+                        },
+                    ],
                 },
             },
         ]);
@@ -116,7 +258,11 @@ export const handleURLStatus = async (req, res) => {
         // keeps the link's full history during and after the migration.
         const legacyTimestamps = (url.visitHistory || [])
             .map((visit) => visit.timestamp)
-            .filter((timestamp) => Number.isFinite(timestamp));
+            .filter(
+                (timestamp) =>
+                    Number.isFinite(timestamp) &&
+                    (!rangeStart || timestamp >= rangeStart.getTime())
+            );
 
         const liveTimestamps = (summary.timestamps || [])
             .map((visit) => new Date(visit.timestamp).getTime())
@@ -146,6 +292,11 @@ export const handleURLStatus = async (req, res) => {
                 operatingSystems: toBreakdown(summary.operatingSystems),
                 channels: toBreakdown(summary.channels),
                 referrers: toBreakdown(summary.referrers),
+                hourly: fillHours(summary.hourly),
+                weekdays: fillWeekdays(summary.weekdays),
+                mapPoints: toMapPoints(summary.mapPoints),
+                recentVisits: toRecentVisits(summary.recentVisits),
+                rangeDays,
             },
         });
     } catch (error) {

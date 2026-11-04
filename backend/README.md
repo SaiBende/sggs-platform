@@ -9,7 +9,7 @@ A full-stack URL shortener and link studio for **SGGS — Shorten, Generate, Gro
 - **Modern workspace UI:** Responsive dashboard with search, sorting, copy, rename and delete actions, QR and analytics modals, plus a live link-in-bio editor.
 - **QR studio:** Fully client-side QR designer with colours, patterns, error correction, optional logo and PNG download.
 - **User Dashboard:** View and manage your created URLs, see visit statistics.
-- **URL Analytics:** Track visit history and status for each short URL, with per-link breakdowns for countries, cities, devices, browsers, operating systems, channels, referrers and unique visitors. Bot and prefetch traffic is excluded.
+- **URL Analytics:** Track visit history and status for each short URL, with per-link breakdowns for countries, cities, devices, browsers, operating systems, channels, referrers and unique visitors, plus hourly/weekday timing, map points and recent visits. Bot and prefetch traffic is excluded.
 - **Edit Short URLs:** Change the short ID of your URLs.
 - **Public Profiles:** Share your profile with social media links and a custom description.
 - **Platform subdomains:** Every account gets a DNS-safe handle for a public profile at `<handle>.sggs.saibende.in`, and can change its username and subdomain from the page editor.
@@ -306,6 +306,17 @@ profile URLs are preserved.
 
 - **Full API Docs:**  
   [View API Documentation](https://documenter.getpostman.com/view/36146554/2sA3rwNEr3)
+
+### Per-link analytics
+
+`POST /api/:shortId/status` returns the owner's analytics for one link. Send an
+optional JSON body with `days` set to `7`, `30` or `90`; omit it for all time.
+The response contains the merged legacy/new visit timestamps plus an `analytics`
+object with totals, unique visitors, countries, cities, devices, browsers,
+operating systems, channels, referrers, 24 hourly buckets, seven weekday buckets,
+map points (rounded to roughly 10 km) and the 20 most recent visits. Hourly and
+weekday buckets use each visit's timezone when available and fall back to UTC.
+Bots and prefetches are stored for auditability but excluded from every count.
 
 ## Project Structure
 

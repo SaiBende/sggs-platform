@@ -470,6 +470,9 @@ test("URL status breaks down locations, devices and channels without bots", asyn
         {
             ...base,
             clickedAt: new Date(5000),
+            timezone: "UTC",
+            latitude: 17.38,
+            longitude: 78.48,
             country: "IN",
             city: "Hyderabad",
             deviceType: "mobile",
@@ -482,6 +485,9 @@ test("URL status breaks down locations, devices and channels without bots", asyn
         {
             ...base,
             clickedAt: new Date(6000),
+            timezone: "UTC",
+            latitude: 19.07,
+            longitude: 72.87,
             country: "IN",
             city: "Mumbai",
             deviceType: "desktop",
@@ -494,6 +500,9 @@ test("URL status breaks down locations, devices and channels without bots", asyn
         {
             ...base,
             clickedAt: new Date(7000),
+            timezone: "UTC",
+            latitude: 40.71,
+            longitude: -74.0,
             country: "US",
             city: "New York",
             deviceType: "tablet",
@@ -568,6 +577,37 @@ test("URL status breaks down locations, devices and channels without bots", asyn
         { name: "google.com", count: 1 },
         { name: "instagram.com", count: 1 },
     ]);
+    assert.equal(analytics.hourly.length, 24);
+    assert.equal(analytics.hourly[0].count, 3);
+    assert.equal(analytics.hourly.reduce((sum, hour) => sum + hour.count, 0), 3);
+    assert.equal(analytics.weekdays.length, 7);
+    assert.equal(
+        analytics.weekdays.find((day) => day.day === 5).count,
+        3
+    );
+    assert.equal(analytics.mapPoints.length, 3);
+    assert.deepEqual(
+        analytics.mapPoints.map((point) => point.city).sort(),
+        ["Hyderabad", "Mumbai", "New York"]
+    );
+    assert.equal(analytics.recentVisits.length, 3);
+    assert.equal(
+        new Date(analytics.recentVisits[0].clickedAt).getTime(),
+        7000
+    );
+
+    const ranged = await invoke(handleURLStatus, {
+        params: { shortId: link.shortId },
+        user: { user_id: String(user._id) },
+        body: { days: 7 },
+    });
+
+    assert.equal(ranged.statusCode, 200);
+    assert.equal(ranged.payload.analytics.rangeDays, 7);
+    assert.equal(ranged.payload.analytics.trackedVisits, 0);
+    assert.equal(ranged.payload.visitHistory.length, 0);
+    assert.equal(ranged.payload.analytics.mapPoints.length, 0);
+    assert.equal(ranged.payload.analytics.recentVisits.length, 0);
 });
 
 test("deleting a link removes its Visits and decrements the user's URL count", async () => {
