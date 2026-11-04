@@ -15,7 +15,6 @@ import {
   Plus,
   QrCode,
   UserRound,
-  Wallet,
   X,
 } from "lucide-react";
 import { apiFetch } from "../utils/auth";
@@ -36,7 +35,6 @@ const createLinks = [
 ];
 
 const moreLinks = [
-  { to: "/pricing", label: "Plans & billing", icon: Wallet },
   { to: "/", label: "Back to website", icon: Home },
   {
     href: "mailto:hello@saibende.tech",
@@ -207,6 +205,29 @@ function WorkspaceLayout({ children }) {
   const pageLabel =
     pageLabels[location.pathname.replace(/\/+$/, "") || "/"] || "Workspace";
 
+  const plan = profile?.plan;
+  const usedLinks = Number.isFinite(profile?.urlCount) ? profile.urlCount : 0;
+  const hasLimitedPlan = Boolean(plan) && !plan.unlimited && Number.isFinite(plan.limit);
+  const usagePercent = hasLimitedPlan
+    ? Math.min(100, Math.round((usedLinks / Math.max(plan.limit, 1)) * 100))
+    : 0;
+  let planTitle = "Plans & pricing";
+  let planDescription = "Compare plans for more links and richer analytics.";
+  let planCta = "Compare plans";
+
+  if (plan) {
+    planTitle = `${plan.name} plan`;
+    if (plan.unlimited) {
+      planDescription = "Unlimited links on this workspace.";
+      planCta = "Manage plan";
+    } else if (hasLimitedPlan) {
+      planDescription = `${usedLinks} of ${plan.limit} links used.`;
+      planCta = plan.slug === "free" ? "Upgrade plan" : "Manage plan";
+    } else {
+      planDescription = "Upgrade for more room and richer analytics.";
+    }
+  }
+
   const closeMobile = () => setMobileOpen(false);
 
   return (
@@ -369,7 +390,47 @@ function WorkspaceLayout({ children }) {
         </div>
 
         <div className="shrink-0 border-t border-ink/10 p-3">
-          <div className="flex items-center gap-2.5 rounded-xl border border-ink/10 bg-canvas p-2.5">
+          <Link
+            to="/pricing"
+            onClick={closeMobile}
+            className="group block rounded-xl border border-brand-200/70 bg-brand-50/80 p-3 transition hover:border-brand-300 hover:bg-brand-50"
+          >
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-700/60">
+                Your plan
+              </p>
+              <p className="mt-1 truncate text-[12px] font-semibold text-ink">
+                {planTitle}
+              </p>
+            </div>
+            <p className="mt-1 text-[10px] leading-4 text-muted">
+              {planDescription}
+            </p>
+            {hasLimitedPlan && (
+              <div
+                className="mt-2 h-1 overflow-hidden rounded-full bg-brand-200/60"
+                role="progressbar"
+                aria-label="Link usage"
+                aria-valuemin={0}
+                aria-valuemax={plan.limit}
+                aria-valuenow={usedLinks}
+              >
+                <span
+                  className={cn(
+                    "block h-full rounded-full transition-[width]",
+                    usagePercent >= 80 ? "bg-amber-500" : "bg-brand-500"
+                  )}
+                  style={{ width: `${usagePercent}%` }}
+                />
+              </div>
+            )}
+            <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-brand-700 transition group-hover:text-brand-800">
+              {planCta}
+              <ChevronRight className="h-3 w-3" />
+            </span>
+          </Link>
+
+          <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-ink/10 bg-canvas p-2.5">
             {clerkUser?.imageUrl ? (
               <img
                 src={clerkUser.imageUrl}

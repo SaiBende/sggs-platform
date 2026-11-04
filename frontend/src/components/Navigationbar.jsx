@@ -3,7 +3,6 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/react";
 import { toast } from "react-toastify";
 import {
-  BarChart3,
   ChevronDown,
   ExternalLink,
   LayoutDashboard,
@@ -162,22 +161,6 @@ function Navigationbar() {
               {link.label}
             </NavLink>
           ))}
-          {isSignedIn && (
-            <NavLink
-              to="/analytics"
-              className={({ isActive }) =>
-                cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-medium transition",
-                  isActive
-                    ? "bg-brand-50 text-brand-700"
-                    : "text-ink/55 hover:bg-ink/[0.04] hover:text-ink"
-                )
-              }
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-              Analytics
-            </NavLink>
-          )}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -213,9 +196,6 @@ function Navigationbar() {
                   <div className="py-1.5">
                     <Link to="/dashboard" role="menuitem" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-ink/65 transition hover:bg-ink/[0.04] hover:text-ink">
                       <LayoutDashboard className="h-4 w-4 text-ink/40" /> Dashboard
-                    </Link>
-                    <Link to="/analytics" role="menuitem" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-ink/65 transition hover:bg-ink/[0.04] hover:text-ink">
-                      <BarChart3 className="h-4 w-4 text-ink/40" /> Analytics
                     </Link>
                     <Link to="/qrgenerate" role="menuitem" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-ink/65 transition hover:bg-ink/[0.04] hover:text-ink">
                       <QrCode className="h-4 w-4 text-ink/40" /> QR studio
@@ -314,9 +294,6 @@ function Navigationbar() {
                 <div className="flex gap-2">
                   <Link to="/dashboard" className={buttonVariants({ variant: "primary", size: "md", className: "flex-1" })}>
                     Dashboard
-                  </Link>
-                  <Link to="/analytics" className={buttonVariants({ variant: "secondary", size: "md", className: "flex-1" })}>
-                    <BarChart3 className="h-4 w-4" /> Analytics
                   </Link>
                   <Button variant="secondary" size="md" onClick={handleLogout} aria-label="Sign out">
                     <LogOut className="h-4 w-4" />
