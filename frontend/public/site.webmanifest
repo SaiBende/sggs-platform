@@ -1,0 +1,29 @@
+{
+  "name": "SGGS — Shorten, Generate, Group & Share",
+  "short_name": "SGGS",
+  "description": "Short links, branded QR codes and link-in-bio pages with click analytics.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#fbfbf8",
+  "theme_color": "#0b0b10",
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

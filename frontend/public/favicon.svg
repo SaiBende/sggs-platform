@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SGGS">
+  <defs>
+    <linearGradient id="sggs-favicon-bg" x1="6" y1="2" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5b4ae8" />
+      <stop offset="0.55" stop-color="#6d5ef6" />
+      <stop offset="1" stop-color="#38bdf8" />
+    </linearGradient>
+    <radialGradient id="sggs-favicon-glow" cx="0" cy="0" r="1" gradientTransform="translate(18 13) rotate(48) scale(44)">
+      <stop stop-color="#ffffff" stop-opacity="0.38" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#sggs-favicon-bg)" />
+  <rect width="64" height="64" rx="16" fill="url(#sggs-favicon-glow)" />
+  <g transform="translate(8 8) scale(2)" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+    <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
+    <path d="M8 12h8" />
+  </g>
+</svg>
