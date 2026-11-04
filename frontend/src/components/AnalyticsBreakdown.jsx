@@ -242,7 +242,7 @@ function AnalyticsBreakdown({ analytics, className }) {
   const hasTracked = (analytics.trackedVisits || 0) > 0;
   const visitsHint =
     analytics.legacyVisits > 0
-      ? "All-time, bots excluded"
+      ? "All-time total"
       : "Bots and prefetches excluded";
 
   return (
