@@ -1014,6 +1014,16 @@ function Dashboard() {
                 height={240}
               />
               <AnalyticsBreakdown analytics={analytics} />
+              {analyticsLink && (
+                <div className="mt-5 flex justify-end border-t border-ink/10 pt-4">
+                  <Link
+                    to={`/analytics?link=${analyticsLink.shortId}`}
+                    className={buttonVariants({ variant: "soft", size: "sm" })}
+                  >
+                    <BarChart3 className="h-3.5 w-3.5" /> Open full analytics
+                  </Link>
+                </div>
+              )}
             </>
           )}
         </div>
