@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/react";
-import { SubscriptionDetailsButton } from "@clerk/react/experimental";
 import { toast } from "react-toastify";
 import {
   ArrowUpRight,
@@ -15,21 +14,20 @@ import {
   Menu,
   Plus,
   QrCode,
-  Settings2,
   UserRound,
+  Wallet,
   X,
 } from "lucide-react";
 import { apiFetch } from "../utils/auth";
-import { clerkBillingAppearance } from "../utils/clerkAppearance";
 import { platformUrl } from "../lib/platform";
 import { cn } from "../lib/utils";
-import BillingBoundary from "./BillingBoundary";
 import { BrandMark } from "./ui/brand-mark";
 import { buttonVariants } from "./ui/button";
 
 const workspaceLinks = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/plan", label: "Plan", icon: Wallet },
 ];
 
 const createLinks = [
@@ -50,6 +48,7 @@ const moreLinks = [
 const pageLabels = {
   "/dashboard": "Overview",
   "/analytics": "Analytics",
+  "/plan": "Plan",
   "/shortenlink": "Shorten link",
   "/qrgenerate": "QR studio",
   "/linktree": "Link in bio",
@@ -68,15 +67,6 @@ const iconClassName = (active) =>
     "h-4 w-4 shrink-0 transition",
     active ? "text-brand-600" : "text-ink/35 group-hover:text-ink/55"
   );
-
-const formatPlanDate = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-};
 
 function WorkspaceNavItem({ item, onNavigate }) {
   const Icon = item.icon;
@@ -217,35 +207,6 @@ function WorkspaceLayout({ children }) {
       : null;
   const pageLabel =
     pageLabels[location.pathname.replace(/\/+$/, "") || "/"] || "Workspace";
-
-  const plan = profile?.plan;
-  const usedLinks = Number.isFinite(profile?.urlCount) ? profile.urlCount : 0;
-  const hasLimitedPlan =
-    Boolean(plan) && !plan.unlimited && Number.isFinite(plan.limit);
-  const usagePercent = hasLimitedPlan
-    ? Math.min(100, Math.round((usedLinks / Math.max(plan.limit, 1)) * 100))
-    : 0;
-  const canManagePlan = plan?.source === "clerk";
-  const planTitle = plan ? `${plan.name} plan` : null;
-
-  let planStatus = "Upgrade for more links and analytics.";
-  if (plan?.source === "clerk") {
-    const periodEnd = formatPlanDate(plan.currentPeriodEnd);
-
-    if (plan.status === "past_due") {
-      planStatus = "Payment past due. Update your billing details.";
-    } else if (plan.cancelAtPeriodEnd && periodEnd) {
-      planStatus = `Cancels on ${periodEnd}`;
-    } else if (periodEnd) {
-      const periodLabel = plan.period === "year" ? "Yearly" : "Monthly";
-      planStatus = `${periodLabel} · renews ${periodEnd}`;
-    } else {
-      planStatus = "Managed by Clerk Billing";
-    }
-  } else if (plan?.source === "legacy") {
-    const periodEnd = formatPlanDate(plan.currentPeriodEnd);
-    planStatus = periodEnd ? `Active until ${periodEnd}` : "Legacy plan · active";
-  }
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -409,81 +370,6 @@ function WorkspaceLayout({ children }) {
         </div>
 
         <div className="shrink-0 border-t border-ink/10 p-3">
-          {plan && (
-            <div className="mb-2 rounded-xl border border-brand-200/60 bg-gradient-to-br from-brand-50/90 to-white p-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-700/60">
-                  Your plan
-                </p>
-                <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold text-brand-700 shadow-sm ring-1 ring-brand-200/60">
-                  {planTitle}
-                </span>
-              </div>
-              <p className="mt-2 text-[11px] font-semibold text-ink">
-                {plan.unlimited
-                  ? "Unlimited links"
-                  : `${usedLinks} of ${plan.limit} links used`}
-              </p>
-              {hasLimitedPlan && (
-                <div
-                  className="mt-1.5 h-1 overflow-hidden rounded-full bg-brand-200/60"
-                  role="progressbar"
-                  aria-label="Link usage"
-                  aria-valuemin={0}
-                  aria-valuemax={plan.limit}
-                  aria-valuenow={usedLinks}
-                >
-                  <span
-                    className={cn(
-                      "block h-full rounded-full transition-[width]",
-                      usagePercent >= 80 ? "bg-amber-500" : "bg-brand-500"
-                    )}
-                    style={{ width: `${usagePercent}%` }}
-                  />
-                </div>
-              )}
-              <p className="mt-1.5 text-[9px] leading-4 text-muted">
-                {planStatus}
-              </p>
-              {canManagePlan ? (
-                <BillingBoundary
-                  fallback={
-                    <Link
-                      to="/pricing"
-                      onClick={closeMobile}
-                      className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-ink/10 bg-white py-2 text-[10px] font-semibold text-ink transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-                    >
-                      <Settings2 className="h-3 w-3" /> Manage plan
-                    </Link>
-                  }
-                >
-                  <SubscriptionDetailsButton
-                    subscriptionDetailsProps={{
-                      appearance: clerkBillingAppearance,
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={closeMobile}
-                      className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-ink/10 bg-white py-2 text-[10px] font-semibold text-ink transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-                    >
-                      <Settings2 className="h-3 w-3" /> Manage plan
-                    </button>
-                  </SubscriptionDetailsButton>
-                </BillingBoundary>
-              ) : (
-                <Link
-                  to="/pricing"
-                  onClick={closeMobile}
-                  className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-ink/10 bg-white py-2 text-[10px] font-semibold text-ink transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-                >
-                  {plan.source === "legacy" ? "View plans" : "Upgrade plan"}
-                  <ArrowUpRight className="h-3 w-3" />
-                </Link>
-              )}
-            </div>
-          )}
-
           <div className="flex items-center gap-2.5 rounded-xl border border-ink/10 bg-canvas p-2.5">
             {clerkUser?.imageUrl ? (
               <img

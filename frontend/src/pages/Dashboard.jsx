@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { SubscriptionDetailsButton } from "@clerk/react/experimental";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -29,7 +28,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { apiFetch } from "../utils/auth";
-import { clerkBillingAppearance } from "../utils/clerkAppearance";
 import { cn } from "../lib/utils";
 import { shortDomain, shortUrl } from "../lib/brand";
 import { platformUrl } from "../lib/platform";
@@ -37,14 +35,12 @@ import VisitTrends from "../components/VisitTrends";
 import AnalyticsBreakdown from "../components/AnalyticsBreakdown";
 import Loading from "../components/Loading";
 import ErrorState from "../components/ErrorState";
-import BillingBoundary from "../components/BillingBoundary";
 import { Button, buttonVariants } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { StatCard } from "../components/ui/stat-card";
 import { Modal } from "../components/ui/modal";
 import { EmptyState } from "../components/ui/empty-state";
 import { Label } from "../components/ui/input";
-import { BackgroundBeams } from "../components/ui/background-beams";
 
 const LOGO_URL =
   "https://res.cloudinary.com/sggs/image/upload/v1731136210/user_profile_photos/logo_yqftnr.png";
@@ -227,93 +223,6 @@ function LinkRow({
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function PlanCard({ user, linkCount, className }) {
-  const plan = user.plan || {};
-  const fallbackLimit = planLimits[plan.category || user.category] ?? 10;
-  const limit = plan.unlimited ? Infinity : user.urlLimit ?? fallbackLimit;
-  const isUnlimited = limit === Infinity;
-  const usage = isUnlimited ? 0 : Math.min(100, (linkCount / limit) * 100);
-  const canManage = plan.source === "clerk";
-  const planName = plan.name || (user.category === "basic" && !user.planExpiresAt ? "Free" : capitalize(user.category));
-
-  let statusLine = "Free plan · Upgrade for more room.";
-
-  if (plan.source === "clerk") {
-    if (plan.status === "past_due") {
-      statusLine = "Payment past due · Update it in the plan manager.";
-    } else if (plan.cancelAtPeriodEnd) {
-      statusLine = `Cancels on ${formatDate(plan.currentPeriodEnd, { month: "short", day: "numeric", year: "numeric" })}`;
-    } else if (plan.currentPeriodEnd) {
-      const periodLabel = plan.period === "year" ? "Yearly" : plan.period === "month" ? "Monthly" : "Subscription";
-      statusLine = `${periodLabel} · renews ${formatDate(plan.currentPeriodEnd, { month: "short", day: "numeric", year: "numeric" })}`;
-    } else {
-      statusLine = plan.status === "canceled" ? "Canceled at period end" : "Managed by Clerk Billing";
-    }
-  } else if (plan.source === "legacy" && plan.currentPeriodEnd) {
-    statusLine = `Active until ${formatDate(plan.currentPeriodEnd, { month: "short", day: "numeric", year: "numeric" })}`;
-  } else if (plan.source === "legacy") {
-    statusLine = "Legacy plan · active";
-  } else if (user.planExpiresAt) {
-    statusLine = `Active until ${formatDate(user.planExpiresAt, { month: "short", day: "numeric", year: "numeric" })}`;
-  }
-
-  return (
-    <div className={cn("relative overflow-hidden rounded-2xl border border-ink/10 bg-ink p-5 text-white", className)}>
-      <BackgroundBeams className="opacity-30" />
-      <div className="relative z-10">
-        <div className="flex items-center justify-between gap-2">
-          <Badge variant="dark-outline" className="capitalize">
-            {planName} plan
-          </Badge>
-          <Sparkles className="h-4 w-4 text-brand-300" />
-        </div>
-        <div className="mt-4 flex items-end justify-between">
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/35">Links used</p>
-            <p className="mt-1 font-display text-2xl font-semibold tracking-[-0.04em]">
-              {formatNumber(linkCount)}
-              <span className="ml-1 text-sm font-medium text-white/35">/ {isUnlimited ? "∞" : limit}</span>
-            </p>
-          </div>
-          {isUnlimited ? (
-            <Badge variant="success" className="border-emerald-400/20 bg-emerald-400/10 text-emerald-300">Unlimited</Badge>
-          ) : (
-            <span className="text-[11px] text-white/35">{Math.round(usage)}%</span>
-          )}
-        </div>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-brand-400 to-sky-300 transition-all duration-700"
-            style={{ width: isUnlimited ? "100%" : `${Math.max(4, usage)}%` }}
-          />
-        </div>
-        <p className="mt-3 text-[10px] leading-4 text-white/35">{statusLine}</p>
-        {canManage ? (
-          <BillingBoundary fallback={null}>
-            <SubscriptionDetailsButton
-              subscriptionDetailsProps={{ appearance: clerkBillingAppearance }}
-            >
-              <button
-                type="button"
-                className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.07] py-2 text-[11px] font-semibold text-white transition hover:bg-white/[0.12]"
-              >
-                <Settings2 className="h-3 w-3" /> Manage plan
-              </button>
-            </SubscriptionDetailsButton>
-          </BillingBoundary>
-        ) : (
-          <Link
-            to="/pricing"
-            className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.07] py-2 text-[11px] font-semibold text-white transition hover:bg-white/[0.12]"
-          >
-            {plan.source === "legacy" ? "View plans" : "Upgrade plan"} <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        )}
       </div>
     </div>
   );
@@ -842,12 +751,21 @@ function Dashboard() {
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
               <StatCard label="Active links" value={formatNumber(urls.length)} hint={limit === Infinity ? "Unlimited plan" : `${Math.max(0, limit - urls.length)} spots left`} icon={<Link2 className="h-4 w-4" />} />
               <StatCard label="Total clicks" value={formatNumber(totalClicks)} hint="Across all links" icon={<MousePointerClick className="h-4 w-4" />} accent="emerald" />
-              <StatCard label="Current plan" value={planValue} hint={planHint} icon={<Wallet className="h-4 w-4" />} accent="amber" />
+              <Link
+                to="/plan"
+                aria-label="View your plan and billing"
+                className="block h-full"
+              >
+                <StatCard
+                  label="Current plan"
+                  value={planValue}
+                  hint={`${planHint} · View plan`}
+                  icon={<Wallet className="h-4 w-4" />}
+                  accent="amber"
+                  className="h-full hover:border-brand-200"
+                />
+              </Link>
               <StatCard label="Clicks / link" value={urls.length ? (totalClicks / urls.length).toFixed(1) : "0"} hint="Average performance" icon={<TrendingUp className="h-4 w-4" />} accent="sky" />
-            </div>
-
-            <div className="mt-4 xl:hidden">
-              <PlanCard user={user} linkCount={urls.length} />
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
@@ -935,9 +853,6 @@ function Dashboard() {
               </section>
 
               <div className="space-y-4">
-                <div className="hidden xl:block">
-                  <PlanCard user={user} linkCount={urls.length} />
-                </div>
                 <ProfileRailCard
                   user={user}
                   profileUrl={profileUrl}

@@ -10,6 +10,7 @@ import Footer from "./components/Footer";
 const workspaceRoutes = new Set([
   "/dashboard",
   "/analytics",
+  "/plan",
   "/shortenlink",
   "/qrgenerate",
   "/linktree",

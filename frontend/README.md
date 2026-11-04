@@ -22,8 +22,8 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 - **Platform subdomains:** Public profiles are also served from DNS-safe handles at `<handle>.sggs.saibende.in`, with short links at `<handle>.sggs.saibende.in/<shortId>`.
 - **Editable page address:** Change the username and subdomain from the page editor, with live availability checks, a shared name pool and a clear warning that old links stop working.
 - **Dashboard:** Search, sort, copy, rename and delete links; open per-link analytics or a downloadable QR code; track plan usage from one workspace.
-- **Workspace sidebar:** Signed-in app pages use a fixed desktop sidebar and a mobile slide-out menu for Overview, Analytics, links, creation tools and the public page. A compact plan card shows usage and opens the Clerk subscription manager; free users are sent to `/pricing`. Public marketing pages keep the top navigation.
-- **Plan management:** The dashboard shows the current plan, link usage and a Manage plan button that opens the Clerk subscription manager, or links to `/pricing` when there is no active subscription.
+- **Workspace sidebar:** Signed-in app pages use a fixed desktop sidebar and a mobile slide-out menu for Overview, Analytics, Plan, links, creation tools and the public page. Public marketing pages keep the top navigation.
+- **Plan & billing workspace:** `/plan` combines the current plan, link usage, Billing details and the Clerk plan picker. Paid plans get a Manage plan button that opens the Clerk subscription manager; free users can upgrade from the plan picker on the same page. `/pricing` remains the public marketing page.
 - **Analytics workspace:** A dedicated `/analytics` page with a searchable link picker and 7/30/90-day or all-time ranges. It shows daily trends, hourly and weekday patterns, a traffic map, top countries and cities, devices, browsers, operating systems, traffic sources, referrers, unique visitors, recent visits and six headline metrics. Bot and prefetch traffic is excluded, and the same breakdowns are available in the dashboard modal.
 - **Authentication:** Clerk’s prebuilt sign-in/sign-up UI, email verification, MFA and password reset, themed to match the app.
 - **Payments:** Clerk Billing with monthly and yearly plans, a Clerk-rendered pricing table, and a subscription manager drawer for upgrades, period changes and cancellation.
@@ -202,7 +202,7 @@ Keep the existing CAA records (`pki.goog`, `sectigo.com`, `letsencrypt.org`).
 │   ├── lib/               # brand/platform helpers, class merging, formatting
 │   ├── legacy/
 │   │   └── stripe/        # inactive Stripe pricing and return pages
-│   ├── pages/             # Home, Dashboard, Analytics, Pricing, LinkTree, About, ...
+│   ├── pages/             # Home, Dashboard, Analytics, Plan, Pricing, LinkTree, About, ...
 │   ├── publicprofile/     # public /u/:username profile
 │   ├── tenant/            # subdomain profile, redirects and 404
 │   ├── utils/             # Clerk auth, appearance, redirect helpers
@@ -257,11 +257,15 @@ chunks are the next performance step when it becomes important.
   `/u/<username>` and at your platform subdomain,
   `<handle>.sggs.saibende.in`.
 - **Manage from the dashboard:** At `/dashboard`, use the workspace sidebar to
-  move between Overview, Analytics, your links, link creation, QR studio,
-  link-in-bio and billing. Search, sort, rename, delete and analyse your links,
-  check plan usage, and copy your public page URL or platform subdomain.
-- **Explore analytics:** Open `/analytics` from the dashboard or your account
-  menu, pick a link, and switch between the last 7, 30 or 90 days or all time.
+  move between Overview, Analytics, Plan, your links, link creation, QR studio
+  and link-in-bio. Search, sort, rename, delete and analyse your links, check
+  plan usage, and copy your public page URL or platform subdomain.
+- **Manage your plan:** Open `/plan` from the workspace sidebar to see your
+  current plan, link usage, renewal date and billing details. Paid plans can be
+  managed in the Clerk subscription drawer; free users can upgrade from the
+  plan picker on the same page.
+- **Explore analytics:** Open `/analytics` from the workspace sidebar, pick a
+  link, and switch between the last 7, 30 or 90 days or all time.
   The selected link and range stay in the URL (`?link=<shortId>&range=30`) so
   the view can be bookmarked or shared with yourself. The traffic map loads
   only when that panel is reached.
@@ -279,10 +283,12 @@ Pricing and checkout are rendered by Clerk Billing:
   feature lists, monthly/yearly toggle and currency directly from the Clerk
   Dashboard.
 - Signed-in users can open the `<SubscriptionDetailsButton />` plan manager from
-  the pricing page or the dashboard plan card to change plans, switch between
-  monthly and yearly billing, or cancel.
-- After checkout, Clerk returns to `/dashboard?billing=success`; the dashboard
-  asks the backend to force-sync the new subscription before showing quotas.
+  `/plan`, the dedicated workspace page for plan details and billing. The public
+  pricing page also exposes the same manager.
+- The `/plan` page embeds the plan picker, so upgrades and period changes happen
+  in one section. After checkout it returns to `/plan?billing=success` and
+  force-syncs the new subscription before showing quotas. Checkout from
+  `/pricing` still returns to `/dashboard?billing=success`.
 - Plan descriptions are configured in Clerk. Keep them free of custom-domain
   promises.
 

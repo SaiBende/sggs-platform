@@ -14,6 +14,7 @@ import LinkTree from './pages/LinkTree';
 import Pricing from './pages/Pricing';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
+import Plan from './pages/Plan';
 import Home from './pages/Home';
 import ShortenLinkPage from './pages/ShortenLinkPage';
 import RedirectURL from './components/RedirectURL';
@@ -73,6 +74,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Analytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="plan"
+              element={
+                <ProtectedRoute>
+                  <Plan />
                 </ProtectedRoute>
               }
             />
