@@ -125,10 +125,20 @@ function LinkRow({
 
       <div className="flex items-center justify-between gap-4 pl-12 sm:justify-end sm:pl-0">
         <div className="flex items-center gap-5">
-          <div className="text-right">
-            <p className="text-[13px] font-semibold tabular-nums text-ink">{formatNumber(clicks)}</p>
-            <p className="text-[10px] text-muted">clicks</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => onAnalytics(url)}
+            className="group/clicks -mx-1 rounded-lg px-1 py-0.5 text-right transition hover:bg-brand-50"
+            title="View analytics"
+            aria-label={`View analytics for ${prettyUrl(shortUrl(url.shortId))}`}
+          >
+            <p className="text-[13px] font-semibold tabular-nums text-ink transition group-hover/clicks:text-brand-700">
+              {formatNumber(clicks)}
+            </p>
+            <p className="flex items-center justify-end gap-1 text-[10px] text-muted">
+              <BarChart3 className="h-2.5 w-2.5" /> clicks
+            </p>
+          </button>
           <div className="hidden w-20 xl:block">
             <div className="h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
               <div
@@ -153,11 +163,12 @@ function LinkRow({
           <button
             type="button"
             onClick={() => onAnalytics(url)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-ink/35 transition hover:bg-white hover:text-ink hover:shadow-sm"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand-100 bg-brand-50 px-2.5 text-[11px] font-semibold text-brand-700 transition hover:border-brand-200 hover:bg-brand-100"
             title="View analytics"
             aria-label="View analytics"
           >
             <BarChart3 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Analytics</span>
           </button>
           <button
             type="button"
