@@ -398,7 +398,7 @@ function QRCodeGenerator() {
             </div>
           </div>
 
-          <div className="lg:sticky lg:top-24">
+          <div className="lg:sticky lg:top-6">
             <div className="overflow-hidden rounded-[1.75rem] border border-ink/10 bg-[#111118] shadow-float">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                 <div className="flex items-center gap-2">

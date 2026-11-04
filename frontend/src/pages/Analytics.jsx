@@ -356,7 +356,7 @@ function Analytics() {
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
-            <aside className="rounded-2xl border border-ink/10 bg-white p-3 shadow-card lg:sticky lg:top-24">
+            <aside className="rounded-2xl border border-ink/10 bg-white p-3 shadow-card lg:sticky lg:top-6">
               <div className="flex items-center justify-between px-1">
                 <p className="text-[11px] font-semibold text-ink">Your links</p>
                 <Badge variant="outline">{links.length}</Badge>

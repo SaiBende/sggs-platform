@@ -22,6 +22,7 @@ Aceternity-style motion and layout primitives — no component-library dependenc
 - **Platform subdomains:** Public profiles are also served from DNS-safe handles at `<handle>.sggs.saibende.in`, with short links at `<handle>.sggs.saibende.in/<shortId>`.
 - **Editable page address:** Change the username and subdomain from the page editor, with live availability checks, a shared name pool and a clear warning that old links stop working.
 - **Dashboard:** Search, sort, copy, rename and delete links; open per-link analytics or a downloadable QR code; track plan usage from one workspace.
+- **Workspace sidebar:** Signed-in app pages use a fixed desktop sidebar and a mobile slide-out menu for Overview, Analytics, links, creation tools, billing and the public page. Public marketing pages keep the top navigation.
 - **Analytics workspace:** A dedicated `/analytics` page with a searchable link picker and 7/30/90-day or all-time ranges. It shows daily trends, hourly and weekday patterns, a traffic map, top countries and cities, devices, browsers, operating systems, traffic sources, referrers, unique visitors, recent visits and six headline metrics. Bot and prefetch traffic is excluded, and the same breakdowns are available in the dashboard modal.
 - **Authentication:** Clerk’s prebuilt sign-in/sign-up UI, email verification, MFA and password reset, themed to match the app.
 - **Payments:** Clerk Billing with monthly and yearly plans, a Clerk-rendered pricing table, and a subscription manager drawer for upgrades, period changes and cancellation.
@@ -205,7 +206,7 @@ Keep the existing CAA records (`pki.goog`, `sectigo.com`, `letsencrypt.org`).
 │   ├── tenant/            # subdomain profile, redirects and 404
 │   ├── utils/             # Clerk auth, appearance, redirect helpers
 │   ├── App.jsx
-│   ├── Layout.jsx
+│   ├── Layout.jsx          # public header/footer or signed-in workspace shell
 │   ├── index.css
 │   └── main.jsx
 ├── index.html
@@ -254,9 +255,10 @@ chunks are the next performance step when it becomes important.
   links. The preview updates as you type and the public page is live at
   `/u/<username>` and at your platform subdomain,
   `<handle>.sggs.saibende.in`.
-- **Manage from the dashboard:** At `/dashboard`, search, sort, rename, delete
-  and analyse your links, check plan usage, and copy your public page URL or
-  platform subdomain.
+- **Manage from the dashboard:** At `/dashboard`, use the workspace sidebar to
+  move between Overview, Analytics, your links, link creation, QR studio,
+  link-in-bio and billing. Search, sort, rename, delete and analyse your links,
+  check plan usage, and copy your public page URL or platform subdomain.
 - **Explore analytics:** Open `/analytics` from the dashboard or your account
   menu, pick a link, and switch between the last 7, 30 or 90 days or all time.
   The selected link and range stay in the URL (`?link=<shortId>&range=30`) so

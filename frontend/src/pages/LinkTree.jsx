@@ -658,7 +658,7 @@ function LinkTree() {
           <div className="space-y-4">
             <section
               id="page-address"
-              className="scroll-mt-24 rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card sm:p-6"
+              className="scroll-mt-20 rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card sm:p-6"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -950,7 +950,7 @@ function LinkTree() {
             </section>
           </div>
 
-          <div className="lg:sticky lg:top-24">
+          <div className="lg:sticky lg:top-6">
             <div className="relative overflow-hidden rounded-[2rem] border border-ink/10 bg-[#111118] p-5 shadow-float sm:p-7">
               <BackgroundBeams className="opacity-25" />
               <div className="relative z-10 mb-5 flex items-center justify-between">

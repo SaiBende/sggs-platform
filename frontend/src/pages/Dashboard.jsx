@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { SubscriptionDetailsButton } from "@clerk/react/experimental";
 import {
@@ -410,41 +410,6 @@ function QuickActions() {
   );
 }
 
-function WorkspaceNav() {
-  const items = [
-    { icon: LayoutDashboard, label: "Overview", active: true },
-    { icon: Link2, label: "Links", href: "#links" },
-    { icon: BarChart3, label: "Analytics", to: "/analytics" },
-    { icon: QrCode, label: "QR studio", to: "/qrgenerate" },
-    { icon: UserRound, label: "Link in bio", to: "/linktree" },
-    { icon: Wallet, label: "Plans & billing", to: "/pricing" },
-  ];
-
-  return (
-    <div className="rounded-2xl border border-ink/10 bg-white p-2 shadow-card">
-      <p className="px-3 pb-1 pt-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-ink/30">Workspace</p>
-      {items.map((item) => {
-        const className = cn(
-          "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-medium transition",
-          item.active ? "bg-ink text-white" : "text-ink/55 hover:bg-ink/[0.04] hover:text-ink"
-        );
-        if (item.to) {
-          return (
-            <Link key={item.label} to={item.to} className={className}>
-              <item.icon className="h-4 w-4" /> {item.label}
-            </Link>
-          );
-        }
-        return (
-          <a key={item.label} href={item.href || "#"} className={className}>
-            <item.icon className="h-4 w-4" /> {item.label}
-          </a>
-        );
-      })}
-    </div>
-  );
-}
-
 function Dashboard() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -470,6 +435,7 @@ function Dashboard() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const shouldRefreshBilling = useMemo(
     () => new URLSearchParams(window.location.search).get("billing") === "success",
     []
@@ -536,6 +502,20 @@ function Dashboard() {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  // The workspace sidebar's "Your links" shortcut may arrive before the
+  // dashboard has finished loading, so scroll again once the section exists.
+  useEffect(() => {
+    if (location.hash !== "#links" || loading || !userData) return undefined;
+
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById("links")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+
+    return () => window.clearTimeout(timer);
+  }, [location.hash, loading, userData]);
 
   // The create page links here with ?edit=<shortId> when the destination
   // already exists. Open the existing rename modal once the dashboard data is
@@ -857,22 +837,7 @@ function Dashboard() {
           </div>
         </section>
 
-        <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
-          <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
-            <WorkspaceNav />
-            <PlanCard user={user} linkCount={urls.length} />
-            <div className="rounded-2xl border border-ink/10 bg-white p-4 shadow-card">
-              <p className="text-[11px] font-semibold text-ink">Need a hand?</p>
-              <p className="mt-1 text-[10px] leading-5 text-muted">Questions about links, plans or QR codes.</p>
-              <a
-                href="mailto:hello@saibende.tech"
-                className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-700 hover:text-brand-800"
-              >
-                Talk to us <ArrowUpRight className="h-3 w-3" />
-              </a>
-            </div>
-          </aside>
-
+        <div className="mt-7">
           <div className="min-w-0">
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
               <StatCard label="Active links" value={formatNumber(urls.length)} hint={limit === Infinity ? "Unlimited plan" : `${Math.max(0, limit - urls.length)} spots left`} icon={<Link2 className="h-4 w-4" />} />
@@ -881,12 +846,12 @@ function Dashboard() {
               <StatCard label="Clicks / link" value={urls.length ? (totalClicks / urls.length).toFixed(1) : "0"} hint="Average performance" icon={<TrendingUp className="h-4 w-4" />} accent="sky" />
             </div>
 
-            <div className="mt-4 lg:hidden">
+            <div className="mt-4 xl:hidden">
               <PlanCard user={user} linkCount={urls.length} />
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-              <section id="links" className="scroll-mt-24 overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-card">
+              <section id="links" className="scroll-mt-20 overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-card">
                 <div className="flex flex-col gap-3 border-b border-ink/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                   <div>
                     <div className="flex items-center gap-2">
@@ -970,6 +935,9 @@ function Dashboard() {
               </section>
 
               <div className="space-y-4">
+                <div className="hidden xl:block">
+                  <PlanCard user={user} linkCount={urls.length} />
+                </div>
                 <ProfileRailCard
                   user={user}
                   profileUrl={profileUrl}
@@ -977,6 +945,18 @@ function Dashboard() {
                   copied={profileCopied}
                 />
                 <QuickActions />
+                <div className="rounded-2xl border border-ink/10 bg-white p-4 shadow-card">
+                  <p className="text-[11px] font-semibold text-ink">Need a hand?</p>
+                  <p className="mt-1 text-[10px] leading-5 text-muted">
+                    Questions about links, plans or QR codes.
+                  </p>
+                  <a
+                    href="mailto:hello@saibende.tech"
+                    className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-700 hover:text-brand-800"
+                  >
+                    Talk to us <ArrowUpRight className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
